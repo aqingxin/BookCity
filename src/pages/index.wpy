@@ -1,0 +1,162 @@
+<style>
+  .home {
+    
+    width: 100%;
+    height: 100%;
+  }
+  .banner {
+    width: 100%;
+    height: 300rpx;
+  }
+  swiper,swiper-item,swiper-item image {
+    width: 100%;
+    height: 100%;
+  }
+  .home-content {
+    /* padding: 0 10rpx; */
+    box-sizing: border-box;
+  }
+  .content-title{
+    padding-left: 15rpx;
+    margin-top: 20rpx;
+    border-left: 6px solid #0366d6;
+  }
+  .content-item {
+    display: flex;
+    padding-left: 30rpx;
+    padding-bottom: 30rpx;
+    margin-top: 30rpx;
+    border-bottom: 1px solid #e6e5e5;
+  }
+  .item-img {
+    width: 170rpx;
+    height: 250rpx;
+    background: #ccc;
+  }
+  .item-img image {
+    width: 100%;
+    height: 100%;
+  }
+  .book-title {
+    overflow: hidden;
+    white-space:nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  .book-author {
+    overflow: hidden;
+    white-space:nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    font-size: 14px;
+    color: #9D9D9D;
+  }
+  .book-des {
+    overflow: hidden;
+    white-space:nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    font-size: 14px;
+    color: #9D9D9D;
+  }
+  .item-info {
+    margin-left: 20rpx;
+    width: 530rpx;
+  }
+  .item-info > view {
+    margin-bottom: 20rpx;
+  }
+</style>
+<template>
+  <view class="container">
+    <view class="home">
+      <view class="banner">
+        <swiper indicator-dots="true" indicator-color="rgba(255,255,255,0.8)" indicator-active-color="#0366d6" autoplay>
+          <block wx:for="{{banner}}" wx:key="index">
+            <swiper-item>
+              <image src="{{item}}"/>
+            </swiper-item>
+          </block>
+        </swiper>
+      </view>
+      <view class="home-content">
+        <view class="content-title">
+          首页推荐
+        </view>
+        <view class="content-main">
+          <block wx:for="{{homeBook}}" wx:key="lIndex">
+            <view class="content-item">
+              <view class="item-img">
+                <image src="{{item.cover}}"/>
+              </view>
+              <view class="item-info">
+                <view class="book-title">{{item.title}}</view>
+                <view class="book-author">{{item.author}}</view>
+                <view class="book-des">{{item.shortIntro}}</view>
+                <view class="book-information">
+                  {{item.majorCate}} | {{item.latelyFollower}}人气
+                </view>
+              </view>
+            </view>
+          </block>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+ 
+  // console.log('moduleA ignored: ', moduleA) // => moduleA ignored: {}
+
+
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: '书城'
+    }
+    components = {
+      
+    }
+
+    // mixins = [testMixin]
+
+    data = {
+      banner:[
+        'http://statics.zhuishushenqi.com/recommendPage/15313940968984',
+        'http://statics.zhuishushenqi.com/recommendPage/153139416791777',
+        'http://statics.zhuishushenqi.com/recommendPage/153139401503529',
+        'http://statics.zhuishushenqi.com/recommendPage/153139406636473'
+      ],
+      homeBook:[]
+    }
+    onLoad(){
+      var that=this;
+      wx.showLoading({
+        title:'加载数据中'
+      })
+      wx.request({
+        url:'http://novel.juhe.im/recommend/53115e30173bfacb4904897e',
+        success:function (res) {
+          for(let i=0;i<res.data.books.length;i++){
+            res.data.books[i].cover=unescape( res.data.books[i].cover);
+            res.data.books[i].cover=res.data.books[i].cover.replace("/agent/", "")
+          }
+          that.homeBook=res.data.books
+          that.$apply()
+          wx.hideLoading();
+        }
+      })
+    }
+    computed = {
+      
+    }
+
+    methods = {
+      
+    }
+    
+  }
+</script>
