@@ -1,0 +1,25 @@
+<style>
+
+</style>
+
+<template>
+  <view></view>
+</template>
+
+<script>
+import wepy from "wepy";
+export default class Bookdetail extends wepy.page {
+  config = {
+    navigationBarTitleText: '详情'
+  }
+  onLoad(option){
+    // console.log(option.bookId)
+    wx.request({
+      url:'http://novel.juhe.im/book-info/'+option.bookId,
+      success:function (res) {
+        console.log(res)
+      }
+    })
+  }
+}
+</script>
