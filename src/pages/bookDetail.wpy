@@ -1,9 +1,185 @@
 <style>
-
+  .detail-top {
+    display: flex;
+    padding-top: 30rpx;
+    padding-left: 30rpx;
+    box-sizing: border-box;
+  }
+  .top-image {
+    width: 200rpx;
+    height: 280rpx;
+    background: #0365d65d;
+    margin-right: 20rpx;
+    /* flex: 0.8; */
+  }
+  .top-image image {
+    width: 100%;
+    height: 100%;
+  }
+  .book-tag {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .book-tag view {
+    padding: 10rpx;
+    background: #0365d65d;
+    color: #fff;
+    font-size: 12px;
+    border-radius: 25px;
+    margin-right: 10rpx;
+    margin-bottom: 10rpx;
+  }
+  .top-item {
+    flex: 2;
+  }
+  .book-title {
+    margin-bottom: 20rpx;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  .book-author,.book-count {
+    margin-bottom: 20rpx;
+    font-size: 14px;
+    color: #0366d6;
+  }
+  .book-count {
+    color: #9D9D9D;
+  }
+  .detail-des {
+    padding: 0 20rpx;
+    margin-top: 20rpx;
+    font-size: 16px;
+    color: #000;
+  }
+  .btn {
+    padding: 0 10rpx;
+    margin-top: 40rpx;
+    display: flex;
+  }
+  .jion-btn {
+    width: 45%;
+    border: 1px solid #0366d6;
+    color: #0366d6;
+    background: transparent;
+    margin-right: 30rpx;
+  }
+  .read-btn {
+    width: 45%;
+    color: #fff;
+    background: #0366d6;
+  }
+  .book-comment {
+    margin-top: 60rpx;
+  }
+  .hot-comment {
+    padding: 0 20rpx;
+    margin-bottom: 20rpx;
+    box-sizing: border-box;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  .comment-item {
+    display: flex;
+    padding: 0 20rpx;
+    box-sizing: border-box;
+  }
+  .left-img {
+    margin-right: 20rpx;
+  }
+  .left-img image {
+    width: 60rpx;
+    height: 60rpx;
+    border-radius: 50%;
+  }
+  .nickName,.comment-content {
+    font-size: 16px;
+    /* color: #9D9D9D; */
+  }
+  .nickName {
+    margin-bottom: 5rpx;
+  }
+  .comment-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10rpx;
+  }
+  .comment-item {
+    margin-bottom: 20rpx;
+    padding-bottom: 20rpx;
+    border-bottom: 1px solid #e6e5e5;
+  }
+  .comment-content {
+    position: relative;
+    
+  }
+  .more {
+    position: absolute;
+    bottom: 0;
+    right: 20rpx;
+    background: #F8F8F8;
+    color: #0366d6
+  }
+  .moreText {
+    overflow : hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+  }
+  .none-comment {
+    width: 100%;
+    font-size: 16px;
+    color: #9D9D9D;
+    text-align: center;
+  }
 </style>
 
 <template>
-  <view></view>
+  <view class="book-detail">
+    <view class="detail-top">
+      <view class="top-image">
+        <image src="{{detailData.cover}}"/>
+      </view>
+      <view class="top-item">
+        <view class="book-title">{{detailData.title}}</view>
+        <view class="book-author">{{detailData.author}}</view>
+        <view class="book-count" wx:if="{{detailData.wordCount!==undefined}}">{{((detailData.wordCount)/10000)}}万字</view>
+        <view class="book-tag">
+          <block wx:for="{{detailData.tags}}" wx:key="index">
+            <view>{{item}}</view>
+          </block>
+        </view>
+      </view>
+    </view>
+    <view class="detail-des">
+      <text style="font-weight: bold;font-size:16px;color:#000;">简介:</text>
+      {{detailData.longIntro}}
+    </view>
+    <view class="btn">
+      <button class="jion-btn">加入书架</button>
+      <button class="read-btn">开始阅读</button>
+    </view>
+    <view class="book-comment">
+      <view class="hot-comment">
+        <text>热门评论</text>
+      </view>
+      <view class="none-comment" wx:if="{{bookComment.length===0&&loadingSuccess}}">暂无数据</view>
+      <view class="comment" wx:else>
+        <block wx:for="{{bookComment}}" wx:key="index">
+          <view class="comment-item">
+            <view class="left-img">
+              <image src="{{'http://statics.zhuishushenqi.com'+item.author.avatar}}"/>
+            </view>
+            <view class="right-info">
+              <view class="nickName">{{item.author.nickname}}</view>
+              <view class="comment-title">{{item.title}}</view>
+              <view class="comment-content {{!item.open?'moreText':''}}">{{item.content}}<text class="more" wx:if="{{item.content.length>107}}" @tap="more({{index}})">{{item.open?'收起':'展开'}}</text></view>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+  </view>
 </template>
 
 <script>
@@ -12,14 +188,62 @@ export default class Bookdetail extends wepy.page {
   config = {
     navigationBarTitleText: '详情'
   }
+  data={
+    detailData:[],
+    bookComment:[],
+    loadingSuccess:false
+  }
   onLoad(option){
-    // console.log(option.bookId)
+    console.log(this)
+    let that=this;
+    wx.showLoading({
+      title:'加载中'
+    })
     wx.request({
       url:'http://novel.juhe.im/book-info/'+option.bookId,
       success:function (res) {
-        console.log(res)
+        res.data.cover=unescape(  res.data.cover);
+        res.data.cover=res.data.cover.replace("/agent/", "");
+        that.detailData=res.data;
+        that.$apply();
+        wx.hideLoading();
+        that.customFunction.fGetBookComment(option.bookId,that)
+
+      },
+      fail:function(res){
+        wx.hideLoading();
+        wx.showToast({
+          title:'加载数据失败',
+          icon:'none'
+        })
       }
     })
   }
+  methods = {
+    more(itemKey){
+      this.bookComment[itemKey].open=!this.bookComment[itemKey].open;
+      this.$apply();
+    }
+  }
+  customFunction = {
+    fGetBookComment(id,that){
+      // let that=this;
+      wx.request({
+        url:`http://api.zhuishushenqi.com/post/review/by-book?book=${id}&sort=updated&start=0&limit=5`,
+        success:function(res){
+          console.log(res)
+           for(let i=0;i<res.data.reviews.length;i++){
+            // res.data.reviews[i].author.nickname=unescape( res.data.reviews[i].author.nickname);
+            res.data.reviews[i].open=false
+          }
+          that.bookComment=res.data.reviews;
+          that.loadingSuccess=true;
+          that.$apply()
+        }
+      })
+    },
+    
+  }
+  
 }
 </script>
