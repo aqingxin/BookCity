@@ -199,7 +199,7 @@ export default class Bookdetail extends wepy.page {
     wx.showLoading({
       title:'加载中'
     })
-    wx.request({
+    wx.request({   //加载书籍信息
       url:'http://novel.juhe.im/book-info/'+option.bookId,
       success:function (res) {
         res.data.cover=unescape(  res.data.cover);
@@ -220,13 +220,13 @@ export default class Bookdetail extends wepy.page {
     })
   }
   methods = {
-    more(itemKey){
+    more(itemKey){   //；评论文本的展开与收起操作
       this.bookComment[itemKey].open=!this.bookComment[itemKey].open;
       this.$apply();
     }
   }
   customFunction = {
-    fGetBookComment(id,that){
+    fGetBookComment(id,that){   //获取该书籍的评论
       // let that=this;
       wx.request({
         url:`http://api.zhuishushenqi.com/post/review/by-book?book=${id}&sort=updated&start=0&limit=5`,
