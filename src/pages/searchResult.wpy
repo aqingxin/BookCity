@@ -1,0 +1,78 @@
+<style>
+
+</style>
+
+<template>
+  <view class="result">
+    <searchinput @search.user="search" :searchKeyword.sync="searchKeyword"></searchinput>
+    <repeat for="{{result}}" key="index" item="item">
+      <BookList :BookList="item"></BookList>
+    </repeat>
+    <Loading :loadMore.sync="loadMore"></Loading>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import BookList from '../components/bookList';
+import Loading from '../components/loading';
+import searchinput from  '../components/searchInput'
+export default class Searchresult extends wepy.page{
+  config={
+    navigationBarTitleText: '搜索结果'
+  }
+  data={
+    searchKeyword:'',
+    result:[],
+    listNum:20,
+    allResult:[],
+    loadMore:false
+  }
+  components={
+    BookList:BookList,
+    Loading:Loading,
+    searchinput:searchinput
+  }
+  onLoad(option){
+    var that=this;
+    that.searchKeyword=option.keyword;
+    that.$apply();
+    that.customFunction.fSearch(option.keyword,that)
+  }
+  onReachBottom(){
+    this.listNum+=20;
+    let tmpArr=this.allResult.slice(this.listNum-20,this.listNum)
+    if(this.result.length==this.result.concat(tmpArr).length){
+      this.loadMore=true;
+    }else{
+      this.result=this.result.concat(tmpArr);
+    }
+    this.$apply();
+  }
+  customFunction={
+    fSearch(keyword,that){
+      wx.request({
+        url:'http://novel.juhe.im/search?keyword='+keyword,
+        success:function (res) {
+          // console.log(res)
+          for(let i=0;i<res.data.books.length;i++){
+            res.data.books[i].cover=unescape( res.data.books[i].cover);
+            res.data.books[i].cover=res.data.books[i].cover.replace("/agent/", "")
+          }
+          that.allResult=res.data.books;
+          that.result=res.data.books.slice(0,that.listNum);
+          that.$apply();
+        }
+      })
+    }
+  }
+  methods={
+    search(keyword){
+      this.allResult=[];
+      this.result=[];
+      this.$apply();
+      this.customFunction.fSearch(keyword,this)
+    }
+  }
+}
+</script>
