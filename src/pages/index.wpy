@@ -21,6 +21,35 @@
     margin-top: 20rpx;
     border-left: 6px solid #0366d6;
   }
+  .search {
+    padding:0 30rpx;
+    display: flex;
+    margin-top: 30rpx;
+    margin-bottom: 30rpx;
+  }
+  .search-input {
+    padding-left: 10rpx;
+    border: 1px solid #D5D5D5;
+    height: 60rpx;
+    background: transparent;
+    width: 83%;
+    vertical-align: middle;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+  .search-btn {
+    background: #0366d6;
+    color: #fff;
+    height: 60rpx;
+    line-height: 60rpx;
+    box-sizing: border-box;
+    vertical-align: middle;
+    border-radius: 0;
+    font-size: 16px;
+    padding: 0;
+    width: 17%;
+    text-align: center;
+  }
 </style>
 <template>
   <view class="container">
@@ -34,13 +63,18 @@
           </block>
         </swiper>
       </view>
+      <!-- <view class="search">
+        <input class="search-input" placeholder="输入书名或作者名" @input="searchInput"/>
+        <button class="search-btn" @tap="search">搜索</button>
+      </view> -->
+      <searchinput @search.user="search"></searchinput>
       <view class="home-content">
         <view class="content-title">
           首页推荐
         </view>
         <view class="content-main">
           <repeat for="{{homeBook}}" key="index" item="item">
-            <BookList :homeBookList="item"></BookList>
+            <BookList :BookList="item"></BookList>
           </repeat>
         </view>
       </view>
@@ -51,29 +85,31 @@
 <script>
   import wepy from 'wepy'
   import BookList from '../components/bookList'
+  import searchinput from '../components/searchInput'
   // console.log('moduleA ignored: ', moduleA) // => moduleA ignored: {}
-
 
   export default class Index extends wepy.page {
     config = {
       navigationBarTitleText: '书城'
     }
     components = {
-      BookList:BookList
+      BookList:BookList,
+      searchinput:searchinput
     }
 
     // mixins = [testMixin]
 
     data = {
-      banner:[
+      banner:[  //banner定死的轮播图图片
         'http://statics.zhuishushenqi.com/recommendPage/15313940968984',
         'http://statics.zhuishushenqi.com/recommendPage/153139416791777',
         'http://statics.zhuishushenqi.com/recommendPage/153139401503529',
         'http://statics.zhuishushenqi.com/recommendPage/153139406636473'
       ],
-      homeBook:[]
+      homeBook:[],
+      searchKey:'',
     }
-    onLoad(){
+    onLoad(){   //加载完成拿数据
       var that=this;
       wx.showLoading({
         title:'加载数据中'
@@ -96,7 +132,24 @@
     }
 
     methods = {
-      
+      searchInput(e){   //input狂
+        this.searchKey=e.detail.value;
+        this.$apply();
+      },
+      search(keyword){
+        // var that=this;
+        // let reg=/^$/;   //判断内容是否为空
+        // if(reg.test(keyword)){
+        //   wx.showToast({
+        //     title:'关键词不能为空',
+        //     icon:'none'
+        //   })
+        // }else{
+          wx.navigateTo({
+            url:'searchResult?keyword='+keyword
+          })
+        // }
+      }
     }
     
   }
