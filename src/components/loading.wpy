@@ -1,0 +1,46 @@
+<style>
+  .loading {
+    padding: 20rpx 0;
+  }
+  .loading-on,.loading-end {
+    text-align: center;
+  }
+  .loading-end {
+    font-size: 16px;
+    color: #9D9D9D;
+  }
+  .loading-on image {
+    width: 40rpx;
+    height: 40rpx;
+    vertical-align: middle;
+    margin-right: 20rpx;
+  }
+  .loading-on text {
+    vertical-align: middle;
+    font-size: 16px;
+  }
+</style>
+
+<template>
+  <view class="loading">
+    <view class="loading-on" wx:if="{{!loadMore}}">
+      <image src="../static/loading.gif" />
+      <text>加载中</text>
+    </view>
+    <view class="loading-end" wx:if="{{loadMore}}">
+      <text>暂无数据</text>
+    </view>
+  </view>
+</template>
+
+
+<script>
+import wepy from "wepy";
+export default class Loading extends wepy.component{
+  props={
+    loadMore:{
+      type:Boolean
+    }
+  }
+}
+</script>
