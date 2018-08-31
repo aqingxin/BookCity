@@ -1,0 +1,72 @@
+<style>
+  .search {
+    padding:0 30rpx;
+    display: flex;
+    margin-top: 30rpx;
+    margin-bottom: 30rpx;
+  }
+  .search-input {
+    padding-left: 10rpx;
+    border: 1px solid #D5D5D5;
+    height: 60rpx;
+    background: transparent;
+    width: 83%;
+    vertical-align: middle;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+  .search-btn {
+    background: #0366d6;
+    color: #fff;
+    height: 60rpx;
+    line-height: 60rpx;
+    box-sizing: border-box;
+    vertical-align: middle;
+    border-radius: 0;
+    font-size: 16px;
+    padding: 0;
+    width: 17%;
+    text-align: center;
+  }
+</style>
+
+<template>
+  <view class="search">
+    <input class="search-input" value="{{searchKeyword}}" placeholder="输入书名或作者名" @input="searchInput"/>
+    <button class="search-btn" @tap="search">搜索</button>
+  </view>
+</template>
+
+
+<script>
+import wepy from "wepy";
+export default class Searchinput extends wepy.component{
+  data={
+    keyword:''
+  }
+  props={
+    searchKeyword:{
+      type:String
+    }
+  }
+
+  methods={
+    searchInput(e){
+      // console.log(e)
+      this.keyword=e.detail.value;
+      this.$apply();
+    },
+    search(){
+      let reg=/^$/;   //判断内容是否为空
+      if(reg.test(this.keyword)){
+        wx.showToast({
+          title:'关键词不能为空',
+          icon:'none'
+        })
+      }else{
+        this.$emit('search',this.keyword);
+      }
+    }
+  }
+}
+</script>
