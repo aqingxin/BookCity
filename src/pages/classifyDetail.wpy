@@ -1,0 +1,71 @@
+<style>
+
+</style>
+
+
+<template>
+  <view class="classify-detail">
+    <repeat for="{{detailData}}" item="item">
+      <BookList :BookList="item"></BookList>
+    </repeat>
+    <Loading :loadMore.sync="loadMore" wx:if="{{loadShow}}"></Loading>
+  </view>
+</template>
+
+
+<script>
+import wepy from 'wepy';
+import BookList from '../components/bookList';
+import Loading from '../components/loading';
+export default class Classifydetail extends wepy.page{
+  data={
+    classify:'',
+    gender:'',
+    detailData:[],
+    loadMore:false,
+    loadShow:false,
+    limitNum:20
+  }
+  components={
+    BookList:BookList,
+    Loading:Loading
+  }
+  onLoad (option) {
+    wx.setNavigationBarTitle({
+      title: option.classify
+    })
+    wx.showLoading({
+      title:'加载中'
+    })
+    this.classify=option.classify;
+    this.gender=option.gender;
+    this.fGetData();
+    console.log(this.gender)
+  }
+  fGetData () {   //获取分类详情的数据
+    var that=this;
+    wx.request({
+      url:`http://novel.juhe.im/category-info?gender=${that.gender}&major=${that.classify}&minor=&start=0&limit=${that.limitNum}`,
+      success:function (res) {
+        console.log(res)
+        for(let i=0;i<res.data.books.length;i++){
+          res.data.books[i].cover=unescape( res.data.books[i].cover);
+          res.data.books[i].cover=res.data.books[i].cover.replace("/agent/", "")
+        }
+        if(that.detailData.length===that.detailData.concat(res.data.books.slice(that.limitNum-20,that.limitNum)).length){
+          that.loadMore=true;
+        }else{
+          that.detailData=that.detailData.concat(res.data.books.slice(that.limitNum-20,that.limitNum));
+        }
+        that.$apply();
+        wx.hideLoading();
+      }
+    })
+  }
+  onReachBottom () {   //触底加载
+    this.limitNum+=20;
+    this.loadShow=true;
+    this.fGetData()
+  }
+}
+</script>

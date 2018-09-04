@@ -1,0 +1,89 @@
+<style>
+  .title {
+    padding-left: 15rpx;
+    margin-top: 20rpx;
+    border-left: 6px solid #0366d6;
+  }
+  .classify-item {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .classify-item > navigator {
+    width: 33%;
+    height: 120rpx;
+    text-align: center;
+    font-size: 16px;
+    border-top: 1px solid #f1f1f1;
+    border-bottom: 1px solid #f1f1f1;
+    border-right: 1px solid #f1f1f1;
+    box-sizing: border-box;
+    line-height: 85rpx;
+  }
+  .classify-item > navigator:nth-child(1),.classify-item > navigator:nth-child(2),.classify-item > navigator:nth-child(3){
+    margin-top: 20rpx;
+  }
+  .book-count {
+    font-size: 12px;
+    color: #9D9D9D;
+    line-height: 0rpx;
+  }
+</style>
+
+
+<template>
+  <view class="classify">
+    <block wx:for="{{classifyData}}" wx:key="index" wx:for-index="index">
+      <view class="classify-list">
+        <view class="title" wx:if="{{index==='male'}}">
+          男生
+        </view>
+        <view class="title" wx:if="{{index==='female'}}">
+          女生
+        </view>
+        <view class="title" wx:if="{{index==='picture'}}">
+          漫画
+        </view>
+        <view class="title" wx:if="{{index==='press'}}">
+          出版
+        </view>
+        <view class="classify-item">
+          <navigator wx:for="{{item}}" wx:key="itemKey" wx:for-index="idx" url="./classifyDetail?classify={{item.name}}&gender={{index}}">
+            {{item.name}}
+            <view class="book-count">
+              {{item.bookCount}}
+            </view>
+          </navigator>
+        </view>
+      </view>
+    </block>
+  </view>
+</template>
+
+
+<script>
+import wepy from "wepy";
+export default class Classify extends wepy.page{
+  config={
+    navigationBarTitleText: '分类'
+  }
+  data={
+    classifyData:[]
+   
+  }
+  onLoad(){
+    var that=this;
+    wx.showLoading({
+      title:'加载中'
+    })
+    wx.request({
+      url:'http://novel.juhe.im/categories',
+      success:function (res) {
+        that.classifyData=res.data;
+        that.$apply();
+        wx.hideLoading();
+      }
+    })
+  }
+}
+</script>
