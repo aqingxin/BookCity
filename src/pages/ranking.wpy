@@ -1,0 +1,113 @@
+<style>
+  .ranking-tab {
+    display: flex;
+    width: 70%;
+    height: 100rpx;
+    margin: 0 auto;
+  }
+  .ranking-tab >view {
+    width: 50%;
+    height: 100%;
+    /* border-bottom: 2px solid #0366d6; */
+    text-align: center;
+    line-height: 100rpx;
+  }
+  .active {
+    border-bottom: 2px solid #0366d6;
+  }
+  swiper{
+    height: 90vh;
+  }
+  swiper-item,scroll-view,.ranking-list {
+    height: 100%;
+  }
+  
+  .ranking-item {
+    width: 100%;
+    height: 120rpx;
+    display: flex;
+    border-bottom: 1px solid #e6e5e5;
+  }
+  .ranking-item image {
+    width: 60rpx;
+    height: 60rpx;
+    margin-top: 30rpx;
+    margin-left: 30rpx;
+  }
+  .ranking-item view {
+    margin-left: 20rpx;
+    line-height: 120rpx;
+  }
+</style>
+
+
+<template>
+  <view class="ranking">
+    <view class="ranking-tab">
+      <view class="{{currentTab==0?'active':''}}" @tap="switchTab({{0}})">男生</view>
+      <view class="{{currentTab==1?'active':''}}" @tap="switchTab({{1}})">女生</view>
+    </view>
+    <swiper current="{{currentTab}}" duration="300" @change="swiperChange">
+      <swiper-item>
+        <scroll-view scroll-y="true">
+          <view class="ranking-list">
+            <view class="ranking-item" wx:for="{{maleData}}" wx:key="index">
+              <image src="http://statics.zhuishushenqi.com/{{item.cover}}" />
+              <view>{{item.title}}</view>
+            </view>
+          </view>
+        </scroll-view>
+      </swiper-item>
+      <swiper-item>
+         <scroll-view scroll-y="true">
+          <view class="ranking-list">
+            <view class="ranking-item" wx:for="{{femaleData}}" wx:key="index">
+              <image src="http://statics.zhuishushenqi.com/{{item.cover}}" />
+              <view>{{item.title}}</view>
+            </view>
+          </view>
+        </scroll-view>
+      </swiper-item>
+    </swiper>
+  </view>
+</template>
+
+
+<script>
+import wepy from "wepy";
+export default class Ranking extends wepy.page{
+  config={
+    navigationBarTitleText:'排行榜'
+  }
+  data={
+    currentTab:0,
+    maleData:[],
+    femaleData:[]
+  }
+  onLoad(){
+    var that=this;
+    wx.showLoading({
+      title:'加载中'
+    })
+    wx.request({
+      url:'http://novel.juhe.im/rank-category',
+      success:function (res) {
+        that.maleData=res.data.male;
+        that.femaleData=res.data.female;
+        that.$apply();
+        wx.hideLoading();
+      }
+    })
+  }
+  methods={
+    switchTab (index) {
+      // console.log(index)
+      this.currentTab=index;
+    },
+    swiperChange (e) {
+      // console.log(e)
+      this.currentTab=e.detail.current;
+    }
+  }
+}
+</script>
