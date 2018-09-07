@@ -1,0 +1,53 @@
+<style>
+
+</style>
+
+
+<template>
+  <view class="ranking-detail">
+    <repeat for="{{bookList}}" key="index" item="item">
+      <BookList :BookList="item"></BookList>
+    </repeat>
+    <Loading :loadMore.sync="loadMore"></Loading>
+  </view>
+</template>
+
+
+<script>
+import wepy from "wepy";
+import BookList from '../components/bookList';
+import Loading from '../components/loading';
+export default class Rankingdetail extends wepy.page{
+  components={
+    BookList:BookList,
+    Loading:Loading
+  }
+  data={
+    loadMore:false,
+    bookList:[]
+  }
+  onLoad (option) {
+    wx.setNavigationBarTitle({
+      title: option.title
+    })
+    this.fGetRanking(option.bookid)
+  }
+  fGetRanking (id) {
+    var that=this;
+    wx.request({
+      url:`http://novel.juhe.im/rank/${id}`,
+      success:function (res) {
+        for(let i=0;i<res.data.ranking.books.length;i++){
+          res.data.ranking.books[i].cover=unescape( res.data.ranking.books[i].cover);
+          res.data.ranking.books[i].cover=res.data.ranking.books[i].cover.replace("/agent/", "")
+        }
+        that.bookList=res.data.ranking.books
+        that.$apply();
+      }
+    })
+  }
+  onReachBottom(){
+    this.loadMore=true;
+  }
+}
+</script>

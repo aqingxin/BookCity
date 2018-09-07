@@ -25,7 +25,11 @@ export default class extends wepy.app {
       'pages/searchResult',
       'pages/classify',
       'pages/ranking',
-      'pages/classifyDetail'
+      'pages/classifyDetail',
+      'pages/rankingDetail',
+      'pages/readBook',
+      'pages/me',
+      'pages/bookShelf'
     ],
     window: {
       backgroundTextStyle: 'light',
@@ -52,11 +56,11 @@ export default class extends wepy.app {
           text: "排行"
         },
         {
-          pagePath: "pages/index",
+          pagePath: "pages/bookShelf",
           text: "书架"
         },
         {
-          pagePath: "pages/index",
+          pagePath: "pages/me",
           text: "我的"
         },
       ]
@@ -64,7 +68,8 @@ export default class extends wepy.app {
   }
 
   globalData = {
-    userInfo: null
+    userInfo: null,
+    userId:null
   }
 
   constructor () {
@@ -73,7 +78,31 @@ export default class extends wepy.app {
   }
 
   onLaunch() {
-    this.testAsync()
+    this.testAsync();
+    var that=this;
+    wx.login({
+      success:res=>{
+        // console.log(res);
+        if(res.code){
+          wx.request({
+            url: 'https://api.weixin.qq.com/sns/jscode2session',
+            data:{
+              appid:"wx13fcc1f0ef0b423a",
+              secret:"fc5c1ee87122a6d68971eebb312db517",
+              js_code:res.code,
+              grant_type: "authorization_code"
+            },
+            success:ress=>{
+              that.globalData.userId=ress.data.openid
+              if (this.userInfoReadyCallback) {
+                this.userInfoReadyCallback(res)
+              }
+            }
+          })
+          
+        }
+      }
+    })
   }
 
   sleep (s) {
@@ -98,6 +127,7 @@ export default class extends wepy.app {
       success (res) {
         that.globalData.userInfo = res.userInfo
         cb && cb(res.userInfo)
+        console.log(this.globalData.userInfo)
       }
     })
   }
