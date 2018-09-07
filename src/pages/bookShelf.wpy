@@ -1,0 +1,173 @@
+<style>
+  .book-list {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    /* justify-content: space-between; */
+    flex-direction: row;
+    /* padding: 20rpx; */
+    padding: 20rpx 30rpx 20rpx 33rpx;
+    box-sizing: border-box;
+  }
+  .list-item {
+    width: 200rpx;
+    text-align: center;
+    margin-bottom: 30rpx;
+    margin-right: 45rpx;
+  }
+  .book-list .list-item:nth-child(3n){
+    margin-right: 0;
+  }
+  .item-img {
+    width: 200rpx;
+    height: 250rpx;
+    background: #0365d65d;
+    box-shadow: 2px 2px 3px #ccc;
+  }
+  .item-img image {
+    width: 100%;
+    height: 100%;
+  }
+  .list-title {
+    width: 100%;
+    overflow: hidden;
+    white-space:nowrap;
+    text-overflow: ellipsis;
+    margin-top: 10rpx;
+    font-size: 32rpx;
+  }
+  .list-none {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    color: #999;
+  }
+</style>
+
+
+<template>
+  <view class="book-shelf">
+    <view class="book-list">
+      <navigator class="list-item" wx:for="{{bookshelf}}" wx:key="index" url="./bookDetail?bookId={{item.book_id}}" @longpress="deleteBook({{item.book_id}})">
+        <view class="item-img">
+          <image src="{{item.book_img}}"/>
+        </view>
+        <view class="list-title">
+          {{item.book_name}}
+        </view>
+      </navigator>
+    </view>
+    <view class="list-none" wx:if="{{bookshelf.length===0&&listNone}}">
+      <text>书架空空如也</text>
+    </view>
+  </view>
+</template>
+
+
+<script>
+import wepy from "wepy";
+export default class Bookshelf extends wepy.page{
+  config={
+    navigationBarTitleText:'书架'
+  }
+  data={
+    bookshelf:[],
+    listNone:false
+  }
+  onLoad () {
+    var that=this;
+    wx.showLoading({
+      title:'加载中'
+    })
+    this.fGetBookShelf();
+    
+  }
+  fGetBookShelf () {   //获取用户所有在书架的书籍
+    var that=this;
+    wx.request({
+      url:'http://10.21.40.155/bookcity/bookshelf.php',
+      data:{  
+        type:'checkAll',
+        user:this.$parent.globalData.userId
+      },
+      success:res=>{
+        // console.log(res)
+        if(res.data.length===0){
+          that.listNone=true
+        }
+        that.bookshelf=res.data;
+        that.$apply();
+        wx.hideLoading();
+      }
+    })
+  }
+  fAgainGet(){
+    var that=this;
+    wx.request({
+      url:'http://10.21.40.155/bookcity/bookshelf.php',
+      data:{  
+        type:'checkAll',
+        user:this.$parent.globalData.userId
+      },
+      success:res=>{
+        // console.log(res)
+        if(res.data.length===0){
+          that.listNone=true
+        }
+        that.bookshelf=res.data;
+        that.$apply();
+        // wx.hideLoading();
+      }
+    })
+  }
+  fDeleteBook (bookId) {    //从书架删除书籍
+    var that=this;
+    wx.request({
+      url:'http://10.21.40.155/bookcity/bookshelf.php',
+      data:{
+        type:'delete',
+        bookid:bookId,
+        userid:this.$parent.globalData.userId,
+        
+      },
+      success:res=>{
+        // console.log(res)
+        if(res.data.status===1){
+          wx.showToast({
+            title:'成功撤出书架',
+            icon:'none'
+          })
+          that.fAgainGet();
+        }else{
+            wx.showToast({
+            title:'撤出书架失败',
+            icon:'none'
+          })
+        }
+      }
+    })
+  }
+  onShow () {
+    this.fGetBookShelf()
+  }
+  methods={
+    deleteBook(bookId){    //长按书籍删除该书籍
+      // console.log(bookId)
+      var that=this;
+      wx.showModal({
+        title: '提示',
+        content: '确定撤出该书籍',
+        success: function(res) {
+          if (res.confirm) {
+            // console.log('用户点击确定')
+            that.fDeleteBook(bookId)
+          } else if (res.cancel) {
+            console.log('用户点击取消')
+          }
+        }
+      })
+    }
+  }
+}
+</script>
