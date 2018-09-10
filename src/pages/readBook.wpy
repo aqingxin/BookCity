@@ -1,0 +1,431 @@
+<style>
+  .book-inner {
+    width: 100%;
+    min-height: 100vh;
+    padding: 20rpx 20rpx 20rpx 20rpx;
+    background: #eee6dd;
+    box-sizing: border-box;
+  }
+  .book-title {
+    padding-top: 20rpx;
+    color: #333;
+    line-height: 1.5;
+    font-weight: bold;
+    font-size: 22px;
+  }
+  .book-content {
+    display: block;
+    font-size: inherit;
+    line-height: 1.5;
+    text-align: justify;
+    margin-top: 20rpx;
+    color: #5c5d58
+  }
+  .setting {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 330rpx;
+    background: rgba(50,51,52,.9);
+    transform: translateY(100%);
+    transition: .3s;
+  }
+  .settingShow {
+    transform: translateY(0);
+  }
+  .settingHide {
+    transform: translateY(100%);
+  }
+  .font-change {
+    display: flex;
+    justify-content: space-between;
+    margin:30rpx auto;
+    width: 90%;
+    color: #fff;
+  }
+  
+  progress {
+    width: 70%;
+  }
+  .bgcolor-change {
+    display: flex;
+    justify-content: space-between;
+    margin: 50rpx auto;
+    width: 90%;
+    color: #fff;
+  }
+  .bgColor-view {
+    padding: 10rpx 60rpx;
+    border: 1px solid #fff;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+  .activeBg {
+    color: #0366d6;
+    border: 1px solid #0366d6;
+  }
+  .chapter-change {
+    width: 90%;
+    display: flex;
+    justify-content: space-between;
+    margin:0 auto;
+    font-size: 34rpx;
+    color: #a8a8a8;
+  }
+  .chapter-change text {
+    width: 200rpx;
+    height: 60rpx;
+    text-align: center;
+    line-height: 60rpx;
+  }
+  .chapter-list {
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: .3s;
+  }
+  .list-left {
+    width: 80%;
+    height: 100%;
+    background: #fff;
+    padding: 20rpx 0 0 20rpx;
+  }
+  .book-name {
+    margin-bottom: 20rpx;
+  }
+  .list-right {
+    width: 20%;
+    height: 100%;
+    background: transparent;
+  }
+  .list-item {
+    padding: 0 70rpx 0 40rpx;
+    border-bottom: 1px solid #f2f2f2;
+    width: 100%;
+    height: 100rpx;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    box-sizing: border-box;
+    line-height: 100rpx;
+    font-size: 28rpx;
+    color: #999;
+  }
+  .left-top {
+    width: 100%;
+    border-bottom: 1px solid #f2f2f2;
+    padding-bottom: 10rpx;
+    height: 9%;
+  }
+  .left-content {
+    height: 91%;
+  }
+  .currentTitle {
+    color:#0366d6;
+  }
+  .chapterShow {
+    transform: translateX(0)
+  }
+  .add-bookshelf {
+    position: fixed;
+    right: 0;
+    bottom: 35%;
+    background: rgba(50,51,52,.9);
+    color: #fff;
+    width: 165rpx;
+    height: 60rpx;
+    border-radius: 20px 0 0 20px;
+    text-align: center;
+    line-height: 60rpx;
+    font-size: 28rpx;
+  }
+</style>
+
+
+<template>
+  <view class="book-inner" style="background:{{settingArr.bgColor}}">
+    <view class='book-item' wx:for="{{chapterDetail}}" wx:key="{{index}}" @tap="fSettingShow">
+      <view class="book-title" style="color:{{settingArr.titleColor}};font-size:{{settingArr.titleFont}}px">{{item.title}}</view>
+      <text class="book-content" style="color:{{settingArr.contentColor}};font-size:{{settingArr.contentFont}}px">{{item.cpContent}}</text>
+    </view>
+    <Loading :loadMore.sync="loadMore" wx:if="{{loadShow}}"></Loading>
+    <view class="setting {{settingShow?'settingShow':'settingHide'}}">
+      <view class="font-change" >
+        <text @tap="fChangeFont('small')">Aa-</text>
+        <progress percent="{{settingArr.progressWidth}}" backgroundColor="#fff" activeColor="#0366d6" stroke-width="3" />
+        <text @tap="fChangeFont('big')">Aa+</text>
+      </view>
+      <view class="bgcolor-change" >
+        <view class="bgColor-view {{settingArr.currentBgColor==index?'activeBg':''}}" wx:for="{{bgColorArr}}" wx:key="{{index}}" @tap="fChangeBgColor({{index}})">
+          {{item}}
+        </view>
+      </view>
+      <view class="chapter-change">
+        <text @tap="changeChapter('prev')">上一章</text>
+        <text @tap="chapterListShow">目录</text>
+        <text @tap="changeChapter('next')">下一章</text>
+      </view>
+    </view>
+    <view class="chapter-list {{chapterListShow?'chapterShow':''}}">
+      <view class="list-left">
+        <view class="left-top">
+          <view class="book-name">{{bookName}}</view>
+         <view style="color:#999;font-size:32rpx;">目录</view>
+        </view>
+        <view class="left-content">
+          <scroll-view style="height:100%;" scroll-y="true">
+            <block wx:for="{{chapter}}" wx:key="index">
+              <view class="list-item {{index===chapterNum?'currentTitle':''}}" @tap="selectChapter({{index}})">{{index+1}}、{{item.title}}</view>
+            </block>
+          </scroll-view>
+        </view>
+      </view>
+      <view class="list-right" @tap="chapterHide"></view>
+    </view>
+  </view>
+</template>
+
+
+<script>
+import wepy from "wepy";
+import Loading from "../components/loading";
+export default  class ReadBook extends wepy.page{
+  components={
+    Loading:Loading
+  }
+  data={
+    bookId:'',
+    bookName:'',
+    chapter:[],    //书籍的所有章节
+    chapterDetail:[],   //章节内容
+    chapterNum:0,
+    settingShow:false,
+    bgColorArr:['默认','夜间','护眼'],
+    settingArr:{   //默认的设置参数
+      currentBgColor:0,
+      bgColor:'#eee6dd',
+      titleColor:'#333',
+      contentColor:'#5c5d58',
+      titleFont:22,
+      contentFont:21,
+      progressWidth:25,
+    },
+    readBook:[],
+    chapterListShow:false,
+    loadMore:false,
+    loadShow:false
+    // chapterList:[]
+  }
+  onLoad (option) {
+    console.log(option)
+    this.bookId=option.bookId;
+    this.bookName=option.bookName;
+    wx.showLoading({
+      title:'加载中'
+    })
+    let storageBook=wx.getStorageSync('readBook');
+    if(storageBook){
+      this.readBook=storageBook;
+      if(JSON.stringify(this.readBook).indexOf(this.bookId)===-1){   //将数组转为字符串再判断本地缓存中有该书籍ID
+        this.readBook.push({bookid:this.bookId,index:this.chapterNum});
+        wx.setStorageSync('readBook',this.readBook);
+      } 
+    }else{
+      this.readBook.push({bookid:this.bookId,index:this.chapterNum});
+      wx.setStorageSync('readBook',this.readBook);
+    }
+
+    this.fGetBookSource();
+    this.fGetStorageData();
+  }
+  fGetStorageData(){    //获取本地存储的设置数据并改变data里的设置数据
+    var that=this;
+    wx.getStorage({
+      key:'setting',
+      success:function(res){
+        console.log(res)
+        that.settingArr=res.data;
+        that.$apply();
+      }
+    })
+  }
+  fGetBookSource () {    //获取书籍源
+    var that=this;
+    wx.request({
+      url:`http://novel.juhe.im/book-sources?view=summary&book=${this.bookId}`,
+      success:function (res) {
+        that.fGetChapter(res.data[0]._id)
+      }
+    })
+  }
+
+  fGetChapter (bookid) {    //通过书籍源ID获取书籍章节
+    var that=this;
+    // let currentChapter=0;
+    for(let i=0;i<this.readBook.length;i++){
+      if(this.readBook[i].bookid===this.bookId){
+        this.chapterNum=this.readBook[i].index;   
+        this.$apply();
+      }
+    }
+    
+    wx.request({
+      url:`http://api.zhuishushenqi.com/btoc/${bookid}?view=chapters&channel=mweb`,
+      success:function (res) {
+        that.chapter=res.data.chapters;   //储存所有的章节
+        that.$apply();
+        that.fGetChapterDetail(res.data.chapters[that.chapterNum].link)
+      }
+    })
+  }
+
+  fGetChapterDetail (link) {    //获取书籍章节详细内容
+    var that=this;
+    let enLink=encodeURIComponent(link);   //编码后的url链接
+    wx.request({
+      url:`http://novel.juhe.im/chapters/${enLink}`,
+      success:function(res){
+        console.log(res.data);
+        if(res.data.length===0){
+          that.loadMore=true;
+          that.$apply();
+          return false;
+        }
+        that.chapterDetail.push(res.data.chapter);
+        that.$apply();
+        wx.hideLoading();
+      },
+      fail:function(){
+        wx.hideLoading();
+        wx.showToast({
+          title:'加载失败',
+          icon:'none'
+        })
+      }
+    })
+  }
+  onReachBottom () {   //触底加载下一章节
+    // console.log(this);
+    this.chapterNum+=1;
+    this.loadShow=true;
+    this.fGetChapterDetail(this.chapter[this.chapterNum].link);
+    for(let i=0;i<this.readBook.length;i++){
+      if(this.readBook[i].bookid===this.bookId){
+        this.readBook[i].index=this.chapterNum;
+        this.$apply();
+      }
+    }
+    wx.setStorageSync('readBook',this.readBook);
+  }
+  fSettingShow () {    //设置组件的显示与否
+    this.settingShow=!this.settingShow;
+  }
+  methods={ 
+    fChangeBgColor (index) {    //切换整体的背景颜色和字体颜色
+      this.settingArr.currentBgColor=index;
+      if(index===0){
+        this.settingArr.bgColor='#eee6dd';
+        this.settingArr.titleColor="#333";
+        this.settingArr.contentColor="#5c5d58";
+      }else if(index===1){
+        this.settingArr.bgColor='#0c0c0c';
+        this.settingArr.titleColor="#888";
+        this.settingArr.contentColor="#666";
+      }else if(index===2){
+        this.settingArr.bgColor='#b8cd8d';
+        this.settingArr.titleColor="#0c2e10";
+        this.settingArr.contentColor="rgba(12,46,16,.8)";
+      }
+      wx.setStorage({
+        key:'setting',
+        data:this.settingArr
+      })
+    },
+    fChangeFont (type) {    //改变字体大小
+      if(type==='big'){
+        if(this.settingArr.progressWidth===100)  return false;
+        this.settingArr.titleFont+=2;
+        this.settingArr.contentFont+=2;
+        this.settingArr.progressWidth+=25;
+      }else {
+        if(this.settingArr.progressWidth===0) return false;
+        this.settingArr.titleFont-=2;
+        this.settingArr.contentFont-=2;
+        this.settingArr.progressWidth-=25;
+      }
+      wx.setStorage({
+        key:'setting',
+        data:this.settingArr
+      })
+    },
+    chapterListShow () {   //章节列表显示
+      this.chapterListShow=true;
+      this.settingShow=false;
+    },
+    chapterHide () {   //章节列表隐藏
+      this.chapterListShow=false;
+    },
+    selectChapter (index) {   //在章节列表选择列表
+      // console.log(index)
+      if(index===this.chapterNum) return false;
+      this.chapterNum=index;
+      this.chapterDetail=[];
+      this.chapterListShow=false;
+      for(let i=0;i<this.readBook.length;i++){   //找到匹配的书籍 把章节index存进本地存储
+        if(this.readBook[i].bookid===this.bookId){
+          this.readBook[i].index=this.chapterNum;
+        }
+      }
+      wx.setStorageSync('readBook',this.readBook)   
+      wx.showLoading({
+        title:'加载中',
+        icon:'none'
+      })
+      this.fGetChapterDetail(this.chapter[index].link);
+    },
+    changeChapter (type) {   //上、下章节切换
+      if(type==='prev'){
+        if(this.chapterNum===0){
+          wx.showToast({
+            title:'已是第一章节',
+            icon:'none'
+          })
+          return false;
+        }else{
+          this.chapterNum-=1;
+        }
+      }else {
+        if(this.chapterNum===this.chapter.length-1){
+          wx.showToast({
+            title:'已是最后一章节',
+            icon:'none'
+          })
+          return false;
+        }else{
+          this.chapterNum+=1;
+        }
+      }
+      this.chapterDetail=[];
+      // this.chapterListShow=false;
+      for(let i=0;i<this.readBook.length;i++){
+        if(this.readBook[i].bookid===this.bookId){
+          this.readBook[i].index=this.chapterNum;
+        }
+      }
+      wx.setStorageSync('readBook',this.readBook)
+      wx.showLoading({
+        title:'加载中',
+        icon:'none'
+      })
+      this.fGetChapterDetail(this.chapter[this.chapterNum].link);
+    },
+    
+  }
+}
+</script>
