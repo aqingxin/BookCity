@@ -26,7 +26,9 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 330rpx;
+    height: auto;
+    padding-bottom: 50rpx;
+    box-sizing: border-box;
     background: rgba(50,51,52,.9);
     transform: translateY(100%);
     transition: .3s;
@@ -105,6 +107,7 @@
     background: transparent;
   }
   .list-item {
+    position: relative;
     padding: 0 70rpx 0 40rpx;
     border-bottom: 1px solid #f2f2f2;
     width: 100%;
@@ -145,30 +148,83 @@
     line-height: 60rpx;
     font-size: 28rpx;
   }
+  .book-item image {
+    display: block;
+    width: 100%;
+    /* height: auto; */
+    /* padding: 0; */
+  }
+  .list-item text {
+    position: absolute;
+    right: 30rpx;
+    top: 35rpx;
+    /* padding: 5rpx 10rpx; */
+    background: #0366d6;
+    color: #fff;
+    width: 60rpx;
+    height: 30rpx;
+    text-align: center;
+    line-height: 30rpx;
+    font-size: 12px;
+  }
+  .vip-chapter {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    text-align: center;
+  }
+  .order-btn{
+    width: 600rpx;
+    height: 100rpx;
+    background: #0366d6;
+    color: #fff;
+    line-height: 100rpx;
+    border-radius: 20px;
+    margin-top: 40rpx;
+  }
 </style>
 
 
 <template>
   <view class="book-inner" style="background:{{settingArr.bgColor}}">
-    <view class='book-item' wx:for="{{chapterDetail}}" wx:key="{{index}}" @tap="fSettingShow">
+    <view class='book-item' wx:for="{{chapterDetail}}" wx:key="{{index}}" @tap="fSettingShow" wx:if="{{bookType==='text'}}">
       <view class="book-title" style="color:{{settingArr.titleColor}};font-size:{{settingArr.titleFont}}px">{{item.title}}</view>
-      <text class="book-content" style="color:{{settingArr.contentColor}};font-size:{{settingArr.contentFont}}px">{{item.cpContent}}</text>
+      <text class="book-content" style="color:{{settingArr.contentColor}};font-size:{{settingArr.contentFont}}px" wx:if="{{item.isVip===false}}">{{item.cpContent}}</text>
+      <view class="vip-chapter" wx:if="{{item.isVip===true}}">
+        <text>此章节为VIP章节，请阅读其他章节</text>
+        <view class="order-btn" @tap.stop="switchChapter">
+          阅读其他章节
+        </view>
+      </view>
     </view>
+    
+    <view class='book-item' wx:for="{{chapterDetail}}" wx:key="{{index}}" @tap="fSettingShow" wx:if="{{bookType==='picture'}}">
+      <view class="book-title" style="color:{{settingArr.titleColor}};font-size:{{settingArr.titleFont}}px">{{item.title}}</view>
+      <image mode="widthFix" wx:for="{{item.images}}" wx:for-item="imgItem" wx:for-key="imgIndex" src="{{imgItem}}" wx:if="{{item.isVip===false}}"/>
+      <view class="vip-chapter" wx:if="{{item.isVip===true}}">
+        <text>此章节为VIP章节，请阅读其他章节</text>
+        <view class="order-btn" @tap.stop="switchChapter">
+          阅读其他章节
+        </view>
+      </view>
+    </view>
+    
     <Loading :loadMore.sync="loadMore" wx:if="{{loadShow}}"></Loading>
-    <view class="setting {{settingShow?'settingShow':'settingHide'}}">
-      <view class="font-change" >
+    <view class="setting {{settingShow===true?'settingShow':'settingHide'}}">
+      <view class="font-change" wx:if="{{bookType==='text'}}">
         <text @tap="fChangeFont('small')">Aa-</text>
         <progress percent="{{settingArr.progressWidth}}" backgroundColor="#fff" activeColor="#0366d6" stroke-width="3" />
         <text @tap="fChangeFont('big')">Aa+</text>
       </view>
-      <view class="bgcolor-change" >
+      <view class="bgcolor-change">
         <view class="bgColor-view {{settingArr.currentBgColor==index?'activeBg':''}}" wx:for="{{bgColorArr}}" wx:key="{{index}}" @tap="fChangeBgColor({{index}})">
           {{item}}
         </view>
       </view>
       <view class="chapter-change">
         <text @tap="changeChapter('prev')">上一章</text>
-        <text @tap="chapterListShow">目录</text>
+        <text @tap="fchapterListShow">目录</text>
         <text @tap="changeChapter('next')">下一章</text>
       </view>
     </view>
@@ -181,7 +237,11 @@
         <view class="left-content">
           <scroll-view style="height:100%;" scroll-y="true">
             <block wx:for="{{chapter}}" wx:key="index">
-              <view class="list-item {{index===chapterNum?'currentTitle':''}}" @tap="selectChapter({{index}})">{{index+1}}、{{item.title}}</view>
+              <view class="list-item {{index===chapterNum?'currentTitle':''}}" @tap="selectChapter({{index}})">
+                {{index+1}}、{{item.title}}
+                <!-- <view>vip</view> -->
+                <text wx:if="{{item.isVip===true}}">vip</text>
+              </view>
             </block>
           </scroll-view>
         </view>
@@ -219,7 +279,8 @@ export default  class ReadBook extends wepy.page{
     readBook:[],
     chapterListShow:false,
     loadMore:false,
-    loadShow:false
+    loadShow:false,
+    bookType:'text'
     // chapterList:[]
   }
   onLoad (option) {
@@ -297,7 +358,17 @@ export default  class ReadBook extends wepy.page{
           that.$apply();
           return false;
         }
-        that.chapterDetail.push(res.data.chapter);
+        if(res.data.chapter.hasOwnProperty('images')){
+          // console.log()
+          res.data.chapter.images=res.data.chapter.images.split(',');
+          console.log(res.data.chapter)
+          that.chapterDetail.push(res.data.chapter);
+          that.bookType='picture';
+        }else{
+          that.chapterDetail.push(res.data.chapter);
+          that.bookType='text';
+        }
+        // console.log(res.data.chapter.hasOwnProperty('images'))
         that.$apply();
         wx.hideLoading();
       },
@@ -364,7 +435,7 @@ export default  class ReadBook extends wepy.page{
         data:this.settingArr
       })
     },
-    chapterListShow () {   //章节列表显示
+    fchapterListShow () {   //章节列表显示
       this.chapterListShow=true;
       this.settingShow=false;
     },
@@ -425,7 +496,11 @@ export default  class ReadBook extends wepy.page{
       })
       this.fGetChapterDetail(this.chapter[this.chapterNum].link);
     },
-    
+    switchChapter (e) {
+      // e.stopPropagation();
+      this.chapterListShow=true;
+      // console.log(1)
+    }
   }
 }
 </script>
