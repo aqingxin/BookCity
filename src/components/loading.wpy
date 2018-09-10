@@ -28,7 +28,7 @@
       <text>加载中</text>
     </view>
     <view class="loading-end" wx:if="{{loadMore}}">
-      <text>暂无数据</text>
+      <text>没有更多内容</text>
     </view>
   </view>
 </template>

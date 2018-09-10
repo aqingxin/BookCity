@@ -55,23 +55,26 @@
 
 <template>
   <!-- <block wx:for="{{homeBookList}}" wx:key="lIndex"> -->
-    <navigator class="content-item" url="../pages/bookDetail?bookId={{homeBookList._id}}">
+    <navigator class="content-item" url="../pages/bookDetail?bookId={{BookList._id}}">
       <view class="item-img">
-        <image src="{{homeBookList.cover}}"/>
+        <image src="{{BookList.cover}}"/>
       </view>
       <view class="item-info">
-        <view class="book-title">{{homeBookList.title}}</view>
-        <view class="book-author">{{homeBookList.author}}</view>
-        <view class="book-des">{{homeBookList.shortIntro}}</view>
+        <view class="book-title">{{BookList.title}}</view>
+        <view class="book-author">{{BookList.author}}</view>
+        <view class="book-des">{{BookList.shortIntro}}</view>
         <view class="book-information">
-          <view>
-            {{homeBookList.majorCate}}
+          <view wx:if="{{BookList.majorCate!==undefined}}">
+            {{BookList.majorCate}}
+          </view>
+          <view wx:else>
+            {{BookList.cat}}
           </view>
             <view style="margin: 0 10rpx;">
             | 
           </view>
             <view style="color:red;">
-            {{homeBookList.latelyFollower}}
+            {{BookList.latelyFollower}}
           </view>
             人气
         </view>
@@ -85,12 +88,9 @@ import wepy from 'wepy'
 
 export default class Booklist extends wepy.component{
   props = {
-    homeBookList:{
+    BookList:{
       type:Object,
-      // default:null
     }
   }
-
-  
 }
 </script>

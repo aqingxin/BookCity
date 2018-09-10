@@ -57,16 +57,23 @@
     display: flex;
   }
   .jion-btn {
+    margin-left: 20rpx;
     width: 45%;
     border: 1px solid #0366d6;
     color: #0366d6;
     background: transparent;
     margin-right: 30rpx;
+    border-radius: 5px;
+    text-align: center;
+    line-height: 96rpx;
   }
   .read-btn {
     width: 45%;
     color: #fff;
     background: #0366d6;
+    border-radius: 5px;
+    text-align: center;
+    line-height: 96rpx;
   }
   .book-comment {
     margin-top: 60rpx;
@@ -110,7 +117,6 @@
   }
   .comment-content {
     position: relative;
-    
   }
   .more {
     position: absolute;
@@ -156,8 +162,8 @@
       {{detailData.longIntro}}
     </view>
     <view class="btn">
-      <button class="jion-btn">加入书架</button>
-      <button class="read-btn">开始阅读</button>
+      <view class="jion-btn" @tap="addBookshelf">{{hasBook?'撤出书架':'加入书架'}}</view>
+      <navigator class="read-btn" url="./readBook?bookId={{detailData._id}}&bookName={{detailData.title}}">开始阅读</navigator>
     </view>
     <view class="book-comment">
       <view class="hot-comment">
@@ -173,7 +179,7 @@
             <view class="right-info">
               <view class="nickName">{{item.author.nickname}}</view>
               <view class="comment-title">{{item.title}}</view>
-              <view class="comment-content {{!item.open?'moreText':''}}">{{item.content}}<text class="more" wx:if="{{item.content.length>107}}" @tap="more({{index}})">{{item.open?'收起':'展开'}}</text></view>
+              <view class="comment-content {{!item.open?'moreText':''}}">{{item.content}}<text class="more" wx:if="{{item.content.length>105}}" @tap="more({{index}})">{{item.open?'收起':'展开'}}</text></view>
             </view>
           </view>
         </block>
@@ -191,23 +197,26 @@ export default class Bookdetail extends wepy.page {
   data={
     detailData:[],
     bookComment:[],
-    loadingSuccess:false
+    loadingSuccess:false,
+    bookId:'',
+    hasBook:false
   }
   onLoad(option){
-    console.log(this)
     let that=this;
+    this.bookId=option.bookId;
     wx.showLoading({
       title:'加载中'
     })
+    this.fCheckBookshelf();
     wx.request({   //加载书籍信息
       url:'http://novel.juhe.im/book-info/'+option.bookId,
       success:function (res) {
-        res.data.cover=unescape(  res.data.cover);
+        res.data.cover=unescape(res.data.cover);
         res.data.cover=res.data.cover.replace("/agent/", "");
         that.detailData=res.data;
         that.$apply();
         wx.hideLoading();
-        that.customFunction.fGetBookComment(option.bookId,that)
+        that.fGetBookComment(option.bookId)
 
       },
       fail:function(res){
@@ -223,26 +232,100 @@ export default class Bookdetail extends wepy.page {
     more(itemKey){   //；评论文本的展开与收起操作
       this.bookComment[itemKey].open=!this.bookComment[itemKey].open;
       this.$apply();
+    },
+    addBookshelf(){
+      var that=this;
+      if(this.hasBook===true){    //hasbook等于true说明书架有该本书、撤出书架
+        wx.request({
+          url:'http://10.21.40.155/bookcity/bookshelf.php',
+          method:"GET",
+          data:{
+            type:'delete',
+            bookid:this.bookId,
+            userid:this.$parent.globalData.userId
+          },
+          success:res=>{
+            // console.log(res)
+            if(res.data.status===1){
+              that.hasBook=false;
+              wx.showToast({
+                title:'成功撤出书架',
+                icon:'none'
+              })
+              that.$apply();
+            }else{
+              wx.showToast({
+                title:'撤出书架失败',
+                icon:'none'
+              })
+            }
+          }
+        })
+      }else{
+        wx.request({     //加入书架
+          url:'http://10.21.40.155/bookcity/bookshelf.php',
+          method:'POST',
+          header: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          data:{
+            bookid:this.bookId,
+            bookName:this.detailData.title,
+            bookImg:this.detailData.cover,
+            userid:this.$parent.globalData.userId
+          },
+          success:function(res){
+            console.log(res);
+            if(res.data.status===1){
+              that.hasBook=true;
+              wx.showToast({
+                title:'成功加入书架',
+                icon:'none'
+              })
+              that.$apply();
+            }else{
+              wx.showToast({
+                title:'加入书架失败',
+                icon:'none'
+              })
+            }
+          }
+        })
+      }
     }
   }
-  customFunction = {
-    fGetBookComment(id,that){   //获取该书籍的评论
-      // let that=this;
-      wx.request({
-        url:`http://api.zhuishushenqi.com/post/review/by-book?book=${id}&sort=updated&start=0&limit=5`,
-        success:function(res){
-          console.log(res)
-           for(let i=0;i<res.data.reviews.length;i++){
-            // res.data.reviews[i].author.nickname=unescape( res.data.reviews[i].author.nickname);
-            res.data.reviews[i].open=false
-          }
-          that.bookComment=res.data.reviews;
-          that.loadingSuccess=true;
-          that.$apply()
+  fGetBookComment(id){   //获取该书籍的评论
+    let that=this;
+    wx.request({
+      url:`http://api.zhuishushenqi.com/post/review/by-book?book=${id}&sort=updated&start=0&limit=5`,
+      success:function(res){
+          for(let i=0;i<res.data.reviews.length;i++){
+          // res.data.reviews[i].author.nickname=unescape( res.data.reviews[i].author.nickname);
+          res.data.reviews[i].open=false
         }
-      })
-    },
-    
+        that.bookComment=res.data.reviews;
+        that.loadingSuccess=true;
+        that.$apply()
+      }
+    })
+  }
+  fCheckBookshelf(){
+    var that=this;
+    wx.request({
+      url:'http://10.21.40.155/bookcity/bookshelf.php',
+      data:{
+        type:'checkOne',
+        bookid:this.bookId,
+        userid:this.$parent.globalData.userId
+      },
+      success:function(res){
+        // console.log(res)
+        if(res.data.status===1){
+          that.hasBook=true;
+        }
+        that.$apply();
+      }
+    })
   }
   
 }

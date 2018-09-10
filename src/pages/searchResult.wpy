@@ -28,7 +28,7 @@ export default class Searchresult extends wepy.page{
     allResult:[],
     loadMore:false
   }
-  components={
+  components={    //引入组件
     BookList:BookList,
     Loading:Loading,
     searchinput:searchinput
@@ -37,9 +37,9 @@ export default class Searchresult extends wepy.page{
     var that=this;
     that.searchKeyword=option.keyword;
     that.$apply();
-    that.customFunction.fSearch(option.keyword,that)
+    that.fSearch(option.keyword)
   }
-  onReachBottom(){
+  onReachBottom(){    //触底加载更多
     this.listNum+=20;
     let tmpArr=this.allResult.slice(this.listNum-20,this.listNum)
     if(this.result.length==this.result.concat(tmpArr).length){
@@ -49,29 +49,29 @@ export default class Searchresult extends wepy.page{
     }
     this.$apply();
   }
-  customFunction={
-    fSearch(keyword,that){
-      wx.request({
-        url:'http://novel.juhe.im/search?keyword='+keyword,
-        success:function (res) {
-          // console.log(res)
-          for(let i=0;i<res.data.books.length;i++){
-            res.data.books[i].cover=unescape( res.data.books[i].cover);
-            res.data.books[i].cover=res.data.books[i].cover.replace("/agent/", "")
-          }
-          that.allResult=res.data.books;
-          that.result=res.data.books.slice(0,that.listNum);
-          that.$apply();
+  fSearch(keyword,that){
+    var that=this;   //获取搜索的结果
+    wx.request({
+      url:'http://novel.juhe.im/search?keyword='+keyword,
+      success:function (res) {
+        // console.log(res)
+        for(let i=0;i<res.data.books.length;i++){
+          res.data.books[i].cover=unescape( res.data.books[i].cover);
+          res.data.books[i].cover=res.data.books[i].cover.replace("/agent/", "")
         }
-      })
-    }
+        that.allResult=res.data.books;
+        that.result=res.data.books.slice(0,that.listNum);
+        that.$apply();
+      }
+    })
   }
   methods={
-    search(keyword){
+    search(keyword){   //点击搜索按钮事件
       this.allResult=[];
       this.result=[];
-      this.$apply();
-      this.customFunction.fSearch(keyword,this)
+      this.loadMore=false;
+      // this.$apply();
+      this.fSearch(keyword)
     }
   }
 }

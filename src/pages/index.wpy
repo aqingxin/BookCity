@@ -79,6 +79,7 @@
         </view>
       </view>
     </view>
+    <Login></Login>
   </view>
 </template>
 
@@ -86,6 +87,7 @@
   import wepy from 'wepy'
   import BookList from '../components/bookList'
   import searchinput from '../components/searchInput'
+  import Login from '../components/login'
   // console.log('moduleA ignored: ', moduleA) // => moduleA ignored: {}
 
   export default class Index extends wepy.page {
@@ -94,7 +96,8 @@
     }
     components = {
       BookList:BookList,
-      searchinput:searchinput
+      searchinput:searchinput,
+      Login:Login
     }
 
     // mixins = [testMixin]
@@ -124,6 +127,13 @@
           that.homeBook=res.data.books
           that.$apply()
           wx.hideLoading();
+        },
+        fail:function (res) {
+          wx.hideLoading();
+          wx.showToast({
+            title:'请求失败',
+            icon:'none'
+          })
         }
       })
     }
@@ -132,7 +142,7 @@
     }
 
     methods = {
-      searchInput(e){   //input狂
+      searchInput(e){   //input框
         this.searchKey=e.detail.value;
         this.$apply();
       },

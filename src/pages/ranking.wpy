@@ -51,20 +51,20 @@
       <swiper-item>
         <scroll-view scroll-y="true">
           <view class="ranking-list">
-            <view class="ranking-item" wx:for="{{maleData}}" wx:key="index">
+            <navigator class="ranking-item" wx:for="{{maleData}}" wx:key="index" url="./rankingDetail?bookid={{item._id}}&title={{item.title}}">
               <image src="http://statics.zhuishushenqi.com/{{item.cover}}" />
               <view>{{item.title}}</view>
-            </view>
+            </navigator>
           </view>
         </scroll-view>
       </swiper-item>
       <swiper-item>
          <scroll-view scroll-y="true">
           <view class="ranking-list">
-            <view class="ranking-item" wx:for="{{femaleData}}" wx:key="index">
+            <navigator class="ranking-item" wx:for="{{femaleData}}" wx:key="index" url="./rankingDetail?bookid={{item._id}}&title={{item.title}}">
               <image src="http://statics.zhuishushenqi.com/{{item.cover}}" />
               <view>{{item.title}}</view>
-            </view>
+            </navigator>
           </view>
         </scroll-view>
       </swiper-item>

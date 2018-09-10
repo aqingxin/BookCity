@@ -1,0 +1,79 @@
+<style>
+  .me-top {
+    position: relative;
+    width: 100%;
+    height: 330rpx;
+    /* background: rgba(50,51,52,.9); */
+    /* background: #3399CC; */
+    border-bottom: 1px solid #e6e5e5;
+    background: #fff;
+  }
+  .user-info,.user-none {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    text-align: center;
+    color: #000;
+  }
+  .user-info image {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+  }
+  .user-none view {
+    margin: 0 auto;
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+    background: #0365d65d;
+  }
+  .user-none button {
+    width: 190rpx;
+    height: 60rpx;
+    border: 1px solid #fff;
+    color: #fff;
+    border-radius: 5px;
+    background: transparent;
+    padding: 0;
+    text-align: center;
+    line-height: 60rpx;
+    margin-top: 20rpx;
+  }
+</style>
+
+
+<template>
+  <view class="me">
+    <view class="me-top">
+      <view class="user-info">
+        <view>
+          <image src="{{userInfo.avatarUrl}}" />
+        </view>
+        <view>
+          <text>{{userInfo.nickName}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+
+<script>
+import wepy from "wepy";
+export default class Me extends wepy.page{
+  config={
+    navigationBarTitleText:'个人中心'
+  }
+  data={
+    userInfo:[]
+  }
+  onLoad(){
+    this.userInfo=wx.getStorageSync('userLogin');
+    console.log(this.$parent.globalData.userId)
+  }
+  methods={
+    
+  }
+}
+</script>
